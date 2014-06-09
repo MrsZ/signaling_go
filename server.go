@@ -2,13 +2,14 @@ package main
 
 import (
 	"github.com/go-martini/martini"
-	"net/http"
+	"github.com/nu7hatch/gouuid"
 )
 import "log"
 import "fmt"
 import "encoding/json"
 import "io"
 import "bytes"
+import "net/http"
 
 
 type Message struct {
@@ -17,6 +18,7 @@ type Message struct {
 	Type string
 	From string
 	To string
+	Room string
 }
 
 
@@ -35,6 +37,13 @@ func ReadJson(from io.Reader, to interface{}) error {
 	return nil
 }
 
+func ToJsonString(info *map[string]string) string {
+	var buf bytes.Buffer
+	result, _ := json.Marshal(info)
+	buf.Write(result)
+	return buf.String()
+}
+
 
 func (self *RestrictedMsg) ReadJson(reader io.Reader) error {
 	return ReadJson(reader, self)
@@ -42,19 +51,9 @@ func (self *RestrictedMsg) ReadJson(reader io.Reader) error {
 
 
 type Broker struct {
-	// Create a map of clients, the keys of the map are the channels
-	// over which we can push messages to attached clients. (The values
-	// are just booleans and are meaningless.)
-	//
-	clients map[chan *Message]bool
 
-	// Channel into which new clients can be pushed
-	//
-	newClients chan chan *Message
-
-	// Channel into which disconnected clients should be pushed
-	//
-	defunctClients chan chan *Message
+	// room name -> client uid -> client chanel
+	clients map[string]map[string]chan *Message
 
 	// Channel into which messages are pushed to be broadcast out
 	// to attahed clients.
@@ -65,46 +64,38 @@ type Broker struct {
 
 func NewBroker() *Broker {
 	b := &Broker{
-		make(map[chan *Message]bool),
-		make(chan (chan *Message)),
-		make(chan (chan *Message)),
+		make(map[string]map[string]chan *Message),
 		make(chan *Message),
 	}
 	return b
 }
 
-func (self *Broker) Start() {
-	// Start a goroutine
-	//
-	go func() {
-		// Loop endlessly
-		//
-		for {
-			// Block until we receive from one of the
-			// three following channels.
-			select {
-			case s := <-self.newClients:
-				// There is a new client attached and we
-				// want to start sending them messages.
-				self.clients[s] = true
-				log.Println("Added new client")
-			case s := <-self.defunctClients:
-				// A client has dettached and we want to
-				// stop sending them messages.
-				delete(self.clients, s)
-				log.Println("Removed client")
-			case msg := <-self.messages:
-				// There is a new message to send. For each
-				// attached client, push the new message
-				// into the client's message channel.
-				for s, _ := range self.clients {
-					s <- msg
-				}
-				log.Printf("Broadcast message to %d clients", len(self.clients))
+
+func pushMessage(msg *Message, broker *Broker){
+	if msg.To != "" {
+		//	Concrete destination
+		room, ok := broker.clients[msg.Room]
+		if !ok {
+				log.Printf("No such room %s", msg.Room)
+				return
+		}
+		client_channel, ok := room[msg.To]
+		if !ok {
+				log.Printf("No such patcipant %s in room %s", msg.To, msg.Room)
+			return
+		}
+		client_channel <- msg
+	} else {
+		// Should be send for all in room
+		for name, q := range broker.clients[msg.Room] {
+			if msg.From != name {
+				q <- msg
 			}
 		}
-	}()
+	}
+	log.Printf("Broadcast message to %s clients", msg.Room)
 }
+
 
 
 func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
@@ -125,17 +116,40 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	messageChan := make(chan *Message)
 	// Add this client to the map of those that should
 	// receive updates
-	b.newClients <- messageChan
+	var roomName = params["room"]
+	uid4, err := uuid.NewV4()
+	if err != nil {
+		http.Error(resp, "uid failed",
+			http.StatusInternalServerError)
+		return
+	}
+	var uid = uid4.String()
+	room, ok := b.clients[roomName]
+	if !ok {
+			room = make(map[string] chan *Message)
+			b.clients[roomName] = room
+	}
+
+	msg := make(map[string]string)
+	msg["uid"] = uid
+	msg["from"] = uid
+	msg["type"] = "newbuddy"
+
+	message := &Message{"", ToJsonString(&msg), "newbuddy", uid, "", roomName}
+	pushMessage(message, b)
+	room[uid] = messageChan
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
 	defer func() {
-		b.defunctClients <- messageChan
+		delete(room, uid)
+	// todo: delete room
 	}()
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
 	headers.Set("Connection", "keep-alive")
 	closer := c.CloseNotify()
+
 	for {
 		select {
 		case msg := <-messageChan:
@@ -157,32 +171,34 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	var route = new(RestrictedMsg)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
+	var roomName = params["room"]
 	if err := ReadJson(buf, route); err != nil {
 		http.Error(resp, "Bad Request", http.StatusBadRequest)
 	} else {
-		message := &Message{"", buf.String(), route.Type, route.From, route.To}
-		b.messages <- message
+		message := &Message{"", buf.String(), route.Type, route.From, route.To, roomName}
+		pushMessage(message, b)
 	}
 	resp.WriteHeader(200)
 }
 
-//func CurryBroker(handler func(resp http.ResponseWriter, req *http.Request, b *Broker), broker *Broker) func(resp http.ResponseWriter, req *http.Request){
-//	return func(resp http.ResponseWriter, req *http.Request){ handler(resp, req, broker) })
-//}
+
+func CorpMiddleware(resp http.ResponseWriter, req *http.Request){
+	headers := resp.Header()
+	headers.Set("Access-Control-Allow-Origin", "*")
+}
 
 func main() {
 	m := martini.Classic()
 	// Make a new Broker instance
 	broker := NewBroker()
+	m.Use(CorpMiddleware)
 
 	m.Get("/", func() string {
 		return "Sup"
 	})
 	m.Post("/update/:room", func(resp http.ResponseWriter, req *http.Request, params martini.Params){ UpdateHandler(resp, req, params, broker) })
+	m.Options("/update/:room", func(resp http.ResponseWriter, req *http.Request, params martini.Params){ UpdateHandler(resp, req, params, broker) })
 	m.Get("/stream/:room", func(resp http.ResponseWriter, req *http.Request, params martini.Params){ ClientStream(resp, req, params, broker) })
 
-	http.Handle("/sheet", m)
-	// Start processing events
-	broker.Start()
 	http.ListenAndServe(":8080", m)
 }
