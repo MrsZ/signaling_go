@@ -54,7 +54,7 @@ type RestrictedMsg struct {
 func ReadJson(from io.Reader, to interface{}) error {
 	dec := json.NewDecoder(from)
 	if err := dec.Decode(to); err != nil {
-		log.Println(err)
+		log.Println("Failed to parse json:", err)
 		return err
 	}
 	return nil
@@ -153,6 +153,13 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			b.clients[roomName] = room
 	}
 
+	headers := resp.Header()
+	headers.Set("Content-Type", "text/event-stream")
+	headers.Set("Cache-Control", "no-cache")
+	headers.Set("Connection", "keep-alive")
+	headers.Set("Access-Control-Allow-Origin", "*")
+	f.Flush()
+	closer := c.CloseNotify()
 
 	message := &Message{"", "", "uid", uid, "", roomName}
 
@@ -174,11 +181,6 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			log.Println("Releasing room %s", roomName)
 		}
 	}()
-	headers := resp.Header()
-	headers.Set("Content-Type", "text/event-stream")
-	headers.Set("Cache-Control", "no-cache")
-	headers.Set("Connection", "keep-alive")
-	closer := c.CloseNotify()
 
 	for {
 		select {
@@ -197,7 +199,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 }
 
 func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
-
+	resp.Header().Set("Access-Control-Allow-Origin", "*")
 	var route = new(RestrictedMsg)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
@@ -222,7 +224,6 @@ func main() {
 	m := martini.Classic()
 	// Make a new Broker instance
 	broker := NewBroker()
-	m.Use(CorpMiddleware)
 
 	m.Get("/", func() string {
 		return "Sup"
@@ -231,5 +232,5 @@ func main() {
 	m.Options("/update/:room", func(resp http.ResponseWriter, req *http.Request, params martini.Params){ UpdateHandler(resp, req, params, broker) })
 	m.Get("/stream/:room", func(resp http.ResponseWriter, req *http.Request, params martini.Params){ ClientStream(resp, req, params, broker) })
 
-	http.ListenAndServe(":8080", m)
+	http.ListenAndServe("0.0.0.0:8080", m)
 }
