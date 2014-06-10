@@ -22,6 +22,29 @@ type Message struct {
 }
 
 
+func (self *Message) NewBuddy() *Message {
+	self.Type = "newbuddy"
+	data := map[string]string {	"uid": self.From, "from": self.From, "to": self.From, "type": "newbuddy"}
+	self.Data = ToJsonString(&data)
+	return self
+}
+
+
+func (self *Message) Uid() *Message {
+	data := map[string]string {	"uid": self.From, "from": self.From, "to": self.From, "type": "uid"}
+	self.Data = ToJsonString(&data)
+	return self
+}
+
+
+func (self *Message) Dropped() *Message {
+	self.Type = "dropped"
+	data := map[string]string {	"from": self.From, "to": "", "type": "dropped"}
+	self.Data = ToJsonString(&data)
+	return self
+}
+
+
 type RestrictedMsg struct {
 	Type  string      `json:"type"`
 	From  string `json:"from"`
@@ -130,19 +153,26 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			b.clients[roomName] = room
 	}
 
-	msg := make(map[string]string)
-	msg["uid"] = uid
-	msg["from"] = uid
-	msg["type"] = "newbuddy"
 
-	message := &Message{"", ToJsonString(&msg), "newbuddy", uid, "", roomName}
-	pushMessage(message, b)
+	message := &Message{"", "", "uid", uid, "", roomName}
+
+	var msg = message.Uid()
+	fmt.Fprintf(resp, "event: %s\n", msg.Type)
+	fmt.Fprintf(resp, "data: %s\n\n", msg.Data)
+	f.Flush()
+
+
+	pushMessage(message.NewBuddy(), b)
 	room[uid] = messageChan
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
 	defer func() {
 		delete(room, uid)
-	// todo: delete room
+		pushMessage(message.Dropped(), b)
+		if len(room) == 0 {
+			delete(b.clients, roomName)
+			log.Println("Releasing room %s", roomName)
+		}
 	}()
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
@@ -183,6 +213,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 
 
 func CorpMiddleware(resp http.ResponseWriter, req *http.Request){
+	// todo: sophisticated middleware
 	headers := resp.Header()
 	headers.Set("Access-Control-Allow-Origin", "*")
 }
