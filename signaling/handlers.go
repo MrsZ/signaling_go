@@ -50,7 +50,6 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
 	headers.Set("Connection", "keep-alive")
-	headers.Set("Access-Control-Allow-Origin", "*")
 	f.Flush()
 	closer := c.CloseNotify()
 
@@ -93,19 +92,6 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 }
 
 func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
-	headers :=resp.Header()
-	headers.Set("Access-Control-Allow-Origin", "*")
-	headers.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-	headers.Set("Access-Control-Max-Age", "1000")
-	headers.Set("Access-Control-Allow-Headers", "origin, x-csrftoken, content-type, accept")
-
-	if  req.ContentLength == 0 {
-		// todo: move options to separate handler
-		log.Println("Nothing sended")
-		resp.WriteHeader(200)
-		return
-	}
-
 	buf := new(bytes.Buffer)
 	bytes_read, _ := buf.ReadFrom(req.Body)
 
@@ -124,5 +110,10 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	message := &Message{"", buf.String(), data["type"], data["from"], data["to"], roomName}
 	pushMessage(message, b)
 
+	resp.WriteHeader(200)
+}
+
+
+func OptionsHandler(resp http.ResponseWriter, req *http.Request){
 	resp.WriteHeader(200)
 }

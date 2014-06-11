@@ -29,7 +29,7 @@ func TestMainPage(t *testing.T) {
 	expect(t, response.Code, http.StatusOK)
 }
 
-func TestUpdate(t *testing.T) {
+func TestEmptyUpdatePost(t *testing.T) {
 	response := httptest.NewRecorder()
 
 	martiniApp := App()
@@ -39,8 +39,19 @@ func TestUpdate(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
+	expect(t, response.Code, http.StatusBadRequest)
+}
+
+
+func TestUpdateOptions(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	request, err := http.NewRequest("OPTIONS", "/update/foo", strings.NewReader(""))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
 	expect(t, response.Code, http.StatusOK)
-	headers := response.Header()
-	// fixme: CORS
-	expect(t, headers.Get("Access-Control-Allow-Origin"), "*")
 }
