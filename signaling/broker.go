@@ -1,26 +1,20 @@
 package signaling
 
 import ("io"
-		"log"
-		)
+        "log"
+)
 
 
 func (self *Message) NewBuddy() *Message {
 	self.Type = "newbuddy"
-	data := map[string]string {	"uid": self.From,
-								"from": self.From,
-								"to": self.From,
-								"type": "newbuddy"}
+	data := map[string]string {"uid": self.From, "from": self.From, "to": self.From, "type": "newbuddy"}
 	self.Data = ToJsonString(&data)
 	return self
 }
 
 
 func (self *Message) Uid() *Message {
-	data := map[string]string {	"uid": self.From,
-								"from": self.From,
-								"to": self.From,
-								"type": "uid"}
+	data := map[string]string {"uid": self.From, "from": self.From, "to": self.From, "type": "uid"}
 	self.Data = ToJsonString(&data)
 	return self
 }
@@ -28,9 +22,7 @@ func (self *Message) Uid() *Message {
 
 func (self *Message) Dropped() *Message {
 	self.Type = "dropped"
-	data := map[string]string {	"from": self.From,
-								"to": "",
-								"type": "dropped"}
+	data := map[string]string {"from": self.From, "to": "", "type": "dropped"}
 	self.Data = ToJsonString(&data)
 	return self
 }
@@ -72,7 +64,7 @@ func pushMessage(msg *Message, broker *Broker){
 		}
 		client_channel, ok := room[msg.To]
 		if !ok {
-				log.Printf("No such patcipant %s in room %s", msg.To, msg.Room)
+				log.Printf("No such partcipant %s in room %s", msg.To, msg.Room)
 			return
 		}
 		client_channel <- msg
