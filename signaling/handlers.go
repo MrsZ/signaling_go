@@ -40,11 +40,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	}
 	var uid = uid4.String()
 	// todo: add max members checking
-	room, ok := b.clients[roomName]
-	if !ok {
-			room = make(map[string] chan *Message)
-			b.clients[roomName] = room
-	}
+	room := b.Room(roomName)
 
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
@@ -62,17 +58,13 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	f.Flush()
 
 
-	pushMessage(message.NewBuddy(), b)
-	room[uid] = messageChan
+	b.PushMessage(message.NewBuddy())
+	(*room)[uid] = messageChan
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
 	defer func() {
-		delete(room, uid)
-		pushMessage(message.Dropped(), b)
-		if len(room) == 0 {
-			delete(b.clients, roomName)
-			log.Printf("Releasing room %s", roomName)
-		}
+		b.Release(roomName, uid)
+		b.PushMessage(message.Dropped())
 	}()
 
 	for {
@@ -108,7 +100,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	log.Println("Ok", data)
 
 	message := &Message{"", buf.String(), data["type"], data["from"], data["to"], roomName}
-	pushMessage(message, b)
+	b.PushMessage(message)
 
 	resp.WriteHeader(200)
 }
