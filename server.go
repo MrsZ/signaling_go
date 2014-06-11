@@ -54,7 +54,7 @@ type RestrictedMsg struct {
 func ReadJson(from io.Reader, to interface{}) error {
 	dec := json.NewDecoder(from)
 	if err := dec.Decode(to); err != nil {
-		log.Println("Failed to parse json:", err)
+		log.Printf("Failed to parse json: %s", err)
 		return err
 	}
 	return nil
@@ -178,7 +178,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 		pushMessage(message.Dropped(), b)
 		if len(room) == 0 {
 			delete(b.clients, roomName)
-			log.Println("Releasing room %s", roomName)
+			log.Printf("Releasing room %s", roomName)
 		}
 	}()
 
@@ -199,17 +199,34 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 }
 
 func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
-	resp.Header().Set("Access-Control-Allow-Origin", "*")
-	var route = new(RestrictedMsg)
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(req.Body)
-	var roomName = params["room"]
-	if err := ReadJson(buf, route); err != nil {
-		http.Error(resp, "Bad Request", http.StatusBadRequest)
-	} else {
-		message := &Message{"", buf.String(), route.Type, route.From, route.To, roomName}
-		pushMessage(message, b)
+	headers :=resp.Header()
+	headers.Set("Access-Control-Allow-Origin", "*")
+	headers.Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+	headers.Set("Access-Control-Max-Age", "1000")
+	headers.Set("Access-Control-Allow-Headers", "origin, x-csrftoken, content-type, accept")
+
+	if  req.ContentLength == 0 {
+		log.Println("Nothing sended")
+		resp.WriteHeader(200)
+		return
 	}
+
+	buf := new(bytes.Buffer)
+	bytes_read, _ := buf.ReadFrom(req.Body)
+
+	var roomName = params["room"]
+	log.Printf("Readed %d bytes from response", bytes_read)
+
+	var data map[string]string
+	json.Unmarshal(buf.Bytes(), &data)
+
+	log.Println("Ok", data)
+
+	message := &Message{"", buf.String(), data["type"], data["from"], data["to"], roomName}
+	pushMessage(message, b)
+
+//	if err := ReadJson(req.Body, data); err != nil {
+//		http.Error(resp, "Bad Request", http.StatusBadRequest)
 	resp.WriteHeader(200)
 }
 
