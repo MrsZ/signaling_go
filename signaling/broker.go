@@ -45,6 +45,30 @@ type Broker struct {
 }
 
 
+func (self *Broker)Room(roomName string) *map[string]chan *Message{
+	room, ok := self.clients[roomName]
+	if !ok {
+		room := make(map[string] chan *Message)
+		self.clients[roomName] = room
+	}
+	return &room
+}
+
+
+func (self *Broker)Release(roomName, member string){
+	room, ok := self.clients[roomName]
+	if !ok {
+		panic("Release non existed")
+	}
+	delete(room, member)
+	if len(room) == 0 {
+		delete(self.clients, roomName)
+		log.Printf("Room %s was completly released", roomName)
+	}
+
+}
+
+
 func NewBroker() *Broker {
 	b := &Broker{
 		make(map[string]map[string]chan *Message),
@@ -54,7 +78,7 @@ func NewBroker() *Broker {
 }
 
 
-func pushMessage(msg *Message, broker *Broker){
+func (broker *Broker)PushMessage(msg *Message){
 	if msg.To != "" {
 		//Concrete message destination
 		room, ok := broker.clients[msg.Room]
