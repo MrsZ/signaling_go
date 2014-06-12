@@ -3,5 +3,4 @@ go:
  - 1.2
 
 script:
- - go get
- - go test ./signaling
+ - go test signaling
