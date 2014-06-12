@@ -93,7 +93,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	var data map[string]string
 	json.Unmarshal(buf.Bytes(), &data)
 
-	if len(data) == 0 {
+	if len(data) == 0 || data["type"] == ""{
 		http.Error(resp, "Bad Request", http.StatusBadRequest)
 		return
 	}

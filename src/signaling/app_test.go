@@ -57,6 +57,94 @@ func TestMalformedUpdatePost(t *testing.T) {
 }
 
 
+func TestGoodUpdatePost(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	body := string(`{"type":"invite",
+					"from":"c2b0eb25",
+					"to":"bf164412",
+					"invite":"invite"}`)
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader(body))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusOK)
+}
+
+
+func TestUpdatePostTypeOnly(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	body := []byte(`{"type":"invite",
+					"invite":"invite"}`)
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader(string(body)))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusOK)
+}
+
+
+func TestUpdatePostNoType(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	body := []byte(`{"from":"c2b0eb25",
+					"to":"bf164412",
+					"invite":"invite"}`)
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader(string(body)))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusBadRequest)
+}
+
+
+func TestUpdatePostNested(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	body := []byte(`{"type":"offer",
+					"from":"c2b0eb25",
+					"to":"bf164412",
+					"offer":{"type":"offer","sdp":"v=0\r\no=Mozilla-SIPUA-28.0 15773 0 IN IP4 0.0.0.0\r\ns"}}`)
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader(string(body)))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusOK)
+}
+
+
+func TestUpdatePostWrongPayloads(t *testing.T) {
+	t.SkipNow()
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	body := []byte(`{"type":"answer",
+					"from":"c2b0eb25",
+					"to":"bf164412",
+					"offer":{"type":"offer","sdp":"v=0\r\no=Mozilla-SIPUA\r\ns"}}`)
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader(string(body)))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusBadRequest)
+}
+
+
 func TestUpdateOptions(t *testing.T) {
 	response := httptest.NewRecorder()
 
