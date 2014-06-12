@@ -13,7 +13,7 @@ func App() *martini.ClassicMartini{
 	m.Get("/", func() string {
 		return "Sup"
 	})
-	// todo: ?broker in context
+	// todo: ?broker injection
 	m.Use(cors.Allow(&cors.Options{
 		   AllowOrigins:     []string{"*"},
 		   AllowMethods:     []string{"POST","OPTIONS"},

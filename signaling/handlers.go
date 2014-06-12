@@ -59,7 +59,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 
 
 	b.PushMessage(message.NewBuddy())
-	(*room)[uid] = messageChan
+	room[uid] = messageChan
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
 	defer func() {

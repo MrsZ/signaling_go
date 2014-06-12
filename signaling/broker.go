@@ -45,13 +45,14 @@ type Broker struct {
 }
 
 
-func (self *Broker)Room(roomName string) *map[string]chan *Message{
+func (self *Broker)Room(roomName string) map[string]chan *Message{
 	room, ok := self.clients[roomName]
 	if !ok {
-		room := make(map[string] chan *Message)
-		self.clients[roomName] = room
+		self.clients[roomName] = map[string] chan *Message{}
+		return self.clients[roomName]
+	}else{
+		return room
 	}
-	return &room
 }
 
 

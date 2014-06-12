@@ -61,12 +61,12 @@ func TestBrokerRoom(t *testing.T){
 	broker := NewBroker()
 	room := broker.Room("foo")
 
-	expect(t, len(*room), 0)
+	expect(t, len(room), 0)
 	messageChan := make(chan *Message)
-	(*room)["SomeGuy"] = messageChan
+	room["SomeGuy"] = messageChan
 
 	roomWithGuy := broker.Room("foo")
-	expect(t, len(*roomWithGuy), 1)
+	expect(t, len(roomWithGuy), 1)
 
 }
 
