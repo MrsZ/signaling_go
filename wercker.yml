@@ -1,0 +1,20 @@
+box: pjvds/golang
+build:
+  steps:
+    -  script:
+        name: go get
+        code: |-
+          ls
+          export GOPATH=$WERCKER_SOURCE_DIR
+          echo $GOPATH
+          cd src/signaling
+          go get
+    -  script:
+        name: go build
+        code: |-
+          go build
+    -  script:
+        name: go test
+        code: |-
+          cd src/signaling
+          go test -v

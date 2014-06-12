@@ -57,9 +57,9 @@ env/
 .env#
 
 Src
-src/
-.src/
-.src
+src/github.com/
+.src/github.com/
+.src/github.com
 
 Deps
 dep/

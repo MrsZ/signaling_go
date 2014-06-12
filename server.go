@@ -1,7 +1,7 @@
 package main
 
 import "net/http"
-import "./signaling"
+import "signaling"
 
 
 func main() {
