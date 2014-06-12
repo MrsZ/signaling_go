@@ -43,6 +43,20 @@ func TestEmptyUpdatePost(t *testing.T) {
 }
 
 
+func TestMalformedUpdatePost(t *testing.T) {
+	response := httptest.NewRecorder()
+
+	martiniApp := App()
+	request, err := http.NewRequest("POST", "/update/foo", strings.NewReader("foo-bar"))
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusBadRequest)
+}
+
+
 func TestUpdateOptions(t *testing.T) {
 	response := httptest.NewRecorder()
 
@@ -70,3 +84,18 @@ func TestBrokerRoom(t *testing.T){
 
 }
 
+
+func TestBrokerRelease(t *testing.T){
+	broker := NewBroker()
+	room := broker.Room("foo")
+
+	expect(t, len(room), 0)
+	messageChan := make(chan *Message)
+	room["SomeGuy"] = messageChan
+
+	broker.Release("foo", "SomeGuy")
+
+	roomWithGuy := broker.Room("foo")
+	expect(t, len(roomWithGuy), 0)
+
+}
