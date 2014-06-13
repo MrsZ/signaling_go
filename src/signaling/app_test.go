@@ -6,7 +6,51 @@ import (
 	"reflect"
 	"testing"
 	"strings"
+	"bytes"
+	"encoding/json"
 )
+
+type MartiniResponseRecorder struct {
+	// Deal with CloseNotify interface inside martini handlers
+	// Pretty useful to send @CloseNotifyC <- true for close response
+	// stream
+	CloseNotifyC  chan bool
+	httptest.ResponseRecorder
+}
+
+
+func (self *MartiniResponseRecorder) CloseNotify() <-chan bool {
+	return self.CloseNotifyC
+}
+
+
+func NewMartiniRecorder() *MartiniResponseRecorder{
+	return &MartiniResponseRecorder{
+				make(chan bool, 1),
+				httptest.ResponseRecorder{
+					HeaderMap: make(http.Header),
+					Body:      new(bytes.Buffer),
+					Code:      200,
+				},
+			}
+}
+
+// Parse buffer from format:
+// event: @name\n
+// data: @json nested structure\n
+// \n
+func ParsePayload(buf *bytes.Buffer)(name string, json_data map[string]string){
+	parts := strings.SplitN(buf.String(), "\n", -1)
+	if len(parts) != 3 {
+		panic("Malformed response")
+	}
+	name = strings.SplitN(parts[0], ":", -1)[1]
+	name = strings.TrimSpace(name)
+	var data string= strings.SplitN(parts[1], ":", 2)[1]
+	data = strings.TrimSpace(data)
+	json.Unmarshal([]byte(data), &json_data)
+	return
+}
 
 
 func expect(t *testing.T, a interface{}, b interface{}) {
@@ -186,4 +230,48 @@ func TestBrokerRelease(t *testing.T){
 	roomWithGuy := broker.Room("foo")
 	expect(t, len(roomWithGuy), 0)
 
+}
+
+
+func TestStreamBasic(t *testing.T) {
+	response := NewMartiniRecorder()
+
+	martiniApp := App()
+	//	GET and immediately close
+	response.CloseNotifyC <- true
+	request, err := http.NewRequest("GET", "/stream/foo", nil)
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusOK)
+	expect(t, response.HeaderMap["Access-Control-Allow-Methods"][0], "POST,OPTIONS")
+	expect(t, response.HeaderMap["Content-Type"][0], "text/event-stream")
+}
+
+
+func TestStreamResponsePayload(t *testing.T) {
+	response := NewMartiniRecorder()
+
+	martiniApp := App()
+	//	GET and immediately close
+	response.CloseNotifyC <- true
+	request, err := http.NewRequest("GET", "/stream/TestStreamResponsePayload", nil)
+	if err != nil {
+		t.Fail()
+	}
+	martiniApp.ServeHTTP(response, request)
+
+	expect(t, response.Code, http.StatusOK)
+
+	name, payloads := ParsePayload(response.Body)
+
+	expect(t, name, "uid")
+
+	expect(t, payloads["type"], "uid")
+	expect(t, payloads["uid"], payloads["from"])
+	//	present from and to
+	_, ok := payloads["from"]
+	expect(t, ok, true)
 }

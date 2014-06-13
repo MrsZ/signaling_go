@@ -54,7 +54,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	var msg = message.Uid()
 	// todo: add local closure for send
 	fmt.Fprintf(resp, "event: %s\n", msg.Type)
-	fmt.Fprintf(resp, "data: %s\n\n", msg.Data)
+	fmt.Fprintf(resp, "data: %s\n", msg.Data)
 	f.Flush()
 
 

@@ -84,12 +84,12 @@ func (broker *Broker)PushMessage(msg *Message){
 		//Concrete message destination
 		room, ok := broker.clients[msg.Room]
 		if !ok {
-				log.Printf("No such room %s", msg.Room)
-				return
+			log.Printf("No such room %s", msg.Room)
+			return
 		}
 		client_channel, ok := room[msg.To]
 		if !ok {
-				log.Printf("No such partcipant %s in room %s", msg.To, msg.Room)
+			log.Printf("No such partcipant %s in room %s", msg.To, msg.Room)
 			return
 		}
 		client_channel <- msg
