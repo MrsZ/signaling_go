@@ -2,7 +2,7 @@ package signaling
 
 import (
 	"github.com/go-martini/martini"
-	"github.com/nu7hatch/gouuid"
+	"summoners"
 )
 
 import "log"
@@ -31,17 +31,9 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	// Add this client to the map of those that should
 	// receive updates
 	var roomName = params["room"]
-	// todo: some human friendly names
-	uid4, err := uuid.NewV4()
-	if err != nil {
-		http.Error(resp, "uid failed",
-			http.StatusInternalServerError)
-		return
-	}
-	var uid = uid4.String()
 	// todo: add max members checking
 	room := b.Room(roomName)
-
+	uid := "Maybe " + summoners.NewName(len(room))
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
