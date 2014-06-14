@@ -28,6 +28,14 @@ func (self *Message) Dropped() *Message {
 }
 
 
+func (self *Message) Rejected() *Message {
+	self.Type = "rejected"
+	data := map[string]string {"from": self.From, "to": "", "type": "rejected", "message": "Room is full"}
+	self.Data = ToJsonString(&data)
+	return self
+}
+
+
 func (self *RestrictedMsg) ReadJson(reader io.Reader) error {
 	return ReadJson(reader, self)
 }
