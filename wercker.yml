@@ -16,5 +16,4 @@ build:
     -  script:
         name: go test
         code: |-
-          cd src/signaling
-          go test -v
+          go test -v signaling summoners
