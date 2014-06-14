@@ -86,7 +86,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
 	buf := new(bytes.Buffer)
 	bytes_read, _ := buf.ReadFrom(req.Body)
-
+	defer req.Body.Close()
 	var roomName = params["room"]
 	log.Printf("Readed %d bytes from response", bytes_read)
 
