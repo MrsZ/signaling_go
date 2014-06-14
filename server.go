@@ -1,10 +1,16 @@
 package main
 
-import "net/http"
-import "signaling"
+import ("fmt"
+        "flag"
+        "net/http"
+        "signaling"
+)
 
 
 func main() {
+	addr :=  flag.String("bind", "0.0.0.0:8080", "Bind address ip:port")
+	flag.Parse()
 	martiniApp := signaling.App()
-	http.ListenAndServe("0.0.0.0:8080", martiniApp)
+	fmt.Printf("Start serving %s\n", *addr)
+	http.ListenAndServe(*addr, martiniApp)
 }
