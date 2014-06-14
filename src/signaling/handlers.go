@@ -44,11 +44,17 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	message := &Message{"", "", "uid", uid, "", roomName}
 
 	var msg = message.Uid()
-	// todo: add local closure for send
-	fmt.Fprintf(resp, "event: %s\n", msg.Type)
-	fmt.Fprintf(resp, "data: %s\n", msg.Data)
-	f.Flush()
 
+	var streamSend = func(m *Message){
+		if msg.Id != "" {
+			fmt.Fprintf(resp, "id: %s\n", m.Id)
+		}
+		fmt.Fprintf(resp, "event: %s\n", m.Type)
+		fmt.Fprintf(resp, "data: %s\n", m.Data)
+		f.Flush()
+	}
+
+	streamSend(msg)
 
 	b.PushMessage(message.NewBuddy())
 	room[uid] = messageChan
@@ -62,12 +68,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	for {
 		select {
 		case msg := <-messageChan:
-			if msg.Id != "" {
-				fmt.Fprintf(resp, "id: %s\n", msg.Id)
-			}
-			fmt.Fprintf(resp, "event: %s\n", msg.Type)
-			fmt.Fprintf(resp, "data: %s\n\n", msg.Data)
-			f.Flush()
+			streamSend(msg)
 		case <-closer:
 			log.Println("Closing connection")
 			return
