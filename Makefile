@@ -7,6 +7,7 @@
 #
 
 all: clean get test compile run
+werker: get test compile
 
 get:
 ifndef GOPATH
