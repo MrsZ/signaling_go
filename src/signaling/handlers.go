@@ -44,8 +44,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 
 	members := len(room)
 	uid := "Maybe " + summoners.NewName(members)
-	message := &Message{"", "", "uid", uid, "", roomName}
-
+	message := &Message{"", "", roomName, Meta{"uid", uid, ""}}
 	if members >= MaxMembers{
 		streamSend(message.Rejected())
 		return
@@ -87,16 +86,15 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	var roomName = params["room"]
 	log.Printf("Readed %d bytes from response", bytes_read)
 
-	var data map[string]string
-	json.Unmarshal(buf.Bytes(), &data)
+	var meta Meta
+	json.Unmarshal(buf.Bytes(), &meta)
 
-	if len(data) == 0 || data["type"] == ""{
+	if  meta.Type == ""{
 		http.Error(resp, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	log.Println("Ok", data)
 
-	message := &Message{"", buf.String(), data["type"], data["from"], data["to"], roomName}
+	message := &Message{"", buf.String(), roomName, meta}
 	b.PushMessage(message)
 
 	resp.WriteHeader(200)
