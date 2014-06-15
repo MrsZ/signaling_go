@@ -5,4 +5,4 @@ build:
         name: make
         code: |-
           export GOPATH=$WERCKER_SOURCE_DIR
-          make
+          make werker
