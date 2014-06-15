@@ -2,8 +2,8 @@ package summoners
 
 import "strings"
 
-
-const namesVariationWidth = 5
+// todo: fix this
+const namesVariationWidth = 6
 
 var ChampionNames = strings.Split(champions, "\n")
 

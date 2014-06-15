@@ -16,3 +16,5 @@ type RestrictedMsg struct {
 	From  string `json:"from"`
 	To string     `json:"to"`
 }
+
+const MaxMembers = 6

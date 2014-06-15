@@ -25,6 +25,14 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			http.StatusInternalServerError)
 		return
 	}
+	var streamSend = func(m *Message){
+		if m.Id != "" {
+			fmt.Fprintf(resp, "id: %s\n", m.Id)
+		}
+		fmt.Fprintf(resp, "event: %s\n", m.Type)
+		fmt.Fprintf(resp, "data: %s\n", m.Data)
+		f.Flush()
+	}
 	// Create a new channel, over which the broker can
 	// send this client messages.
 	messageChan := make(chan *Message)
@@ -33,26 +41,22 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	var roomName = params["room"]
 	// todo: add max members checking
 	room := b.Room(roomName)
-	uid := "Maybe " + summoners.NewName(len(room))
+
+	members := len(room)
+	uid := "Maybe " + summoners.NewName(members)
+	message := &Message{"", "", "uid", uid, "", roomName}
+
+	if members >= MaxMembers{
+		streamSend(message.Rejected())
+		return
+	}
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
 	headers.Set("Connection", "keep-alive")
 	f.Flush()
 	closer := c.CloseNotify()
-
-	message := &Message{"", "", "uid", uid, "", roomName}
-
-	var msg = message.Uid()
-
-	var streamSend = func(m *Message){
-		if msg.Id != "" {
-			fmt.Fprintf(resp, "id: %s\n", m.Id)
-		}
-		fmt.Fprintf(resp, "event: %s\n", m.Type)
-		fmt.Fprintf(resp, "data: %s\n", m.Data)
-		f.Flush()
-	}
+	msg := message.Uid()
 
 	streamSend(msg)
 
