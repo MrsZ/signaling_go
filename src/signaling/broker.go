@@ -1,45 +1,40 @@
 package signaling
 
-import ("io"
-        "log"
+import (
+	"io"
+	"log"
 )
-
 
 func (self *Message) NewBuddy() *Message {
 	self.Type = "newbuddy"
-	data := map[string]string {"uid": self.From, "from": self.From, "to": self.From, "type": "newbuddy"}
+	data := map[string]string{"uid": self.From, "from": self.From, "to": self.From, "type": "newbuddy"}
 	self.Data = ToJsonString(&data)
 	return self
 }
-
 
 func (self *Message) Uid() *Message {
-	data := map[string]string {"uid": self.From, "from": self.From, "to": self.From, "type": "uid"}
+	data := map[string]string{"uid": self.From, "from": self.From, "to": self.From, "type": "uid"}
 	self.Data = ToJsonString(&data)
 	return self
 }
-
 
 func (self *Message) Dropped() *Message {
 	self.Type = "dropped"
-	data := map[string]string {"from": self.From, "to": "", "type": "dropped"}
+	data := map[string]string{"from": self.From, "to": "", "type": "dropped"}
 	self.Data = ToJsonString(&data)
 	return self
 }
-
 
 func (self *Message) Rejected() *Message {
 	self.Type = "rejected"
-	data := map[string]string {"from": self.From, "to": "", "type": "rejected", "message": "Room is full"}
+	data := map[string]string{"from": self.From, "to": "", "type": "rejected", "message": "Room is full"}
 	self.Data = ToJsonString(&data)
 	return self
 }
-
 
 func (self *RestrictedMsg) ReadJson(reader io.Reader) error {
 	return ReadJson(reader, self)
 }
-
 
 type Broker struct {
 
@@ -52,19 +47,17 @@ type Broker struct {
 	messages chan *Message
 }
 
-
-func (self *Broker)Room(roomName string) map[string]chan *Message{
+func (self *Broker) Room(roomName string) map[string]chan *Message {
 	room, ok := self.clients[roomName]
 	if !ok {
-		self.clients[roomName] = map[string] chan *Message{}
+		self.clients[roomName] = map[string]chan *Message{}
 		return self.clients[roomName]
-	}else{
+	} else {
 		return room
 	}
 }
 
-
-func (self *Broker)Release(roomName, member string){
+func (self *Broker) Release(roomName, member string) {
 	room, ok := self.clients[roomName]
 	if !ok {
 		panic("Release non existed")
@@ -77,7 +70,6 @@ func (self *Broker)Release(roomName, member string){
 
 }
 
-
 func NewBroker() *Broker {
 	b := &Broker{
 		make(map[string]map[string]chan *Message),
@@ -86,8 +78,7 @@ func NewBroker() *Broker {
 	return b
 }
 
-
-func (broker *Broker)PushMessage(msg *Message){
+func (broker *Broker) PushMessage(msg *Message) {
 	if msg.To != "" {
 		//Concrete message destination
 		room, ok := broker.clients[msg.Room]
@@ -109,5 +100,5 @@ func (broker *Broker)PushMessage(msg *Message){
 			}
 		}
 	}
-	log.Printf("Broadcast message to %s clients", msg.Room)
+	log.Printf("Broadcast message %s to %s clients", msg.Type, msg.Room)
 }

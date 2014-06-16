@@ -1,64 +1,60 @@
 package signaling
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"testing"
 	"strings"
-	"bytes"
-	"encoding/json"
+	"testing"
 )
 
 type MartiniResponseRecorder struct {
 	// Deal with CloseNotify interface inside martini handlers
 	// Pretty useful to send @CloseNotifyC <- true for close response
 	// stream
-	CloseNotifyC  chan bool
+	CloseNotifyC chan bool
 	httptest.ResponseRecorder
 }
-
 
 func (self *MartiniResponseRecorder) CloseNotify() <-chan bool {
 	return self.CloseNotifyC
 }
 
-
-func NewMartiniRecorder() *MartiniResponseRecorder{
+func NewMartiniRecorder() *MartiniResponseRecorder {
 	return &MartiniResponseRecorder{
-				make(chan bool, 1),
-				httptest.ResponseRecorder{
-					HeaderMap: make(http.Header),
-					Body:      new(bytes.Buffer),
-					Code:      200,
-				},
-			}
+		make(chan bool, 1),
+		httptest.ResponseRecorder{
+			HeaderMap: make(http.Header),
+			Body:      new(bytes.Buffer),
+			Code:      200,
+		},
+	}
 }
 
 // Parse buffer from format:
 // event: @name\n
 // data: @json nested structure\n
 // \n
-func ParsePayload(buf *bytes.Buffer)(name string, json_data map[string]string){
+func ParsePayload(buf *bytes.Buffer) (name string, json_data map[string]string) {
 	parts := strings.SplitN(buf.String(), "\n", -1)
-	if len(parts) != 3 {
+	if len(parts) != 4 {
 		panic("Malformed response")
 	}
 	name = strings.SplitN(parts[0], ":", -1)[1]
 	name = strings.TrimSpace(name)
-	var data string= strings.SplitN(parts[1], ":", 2)[1]
+	var data string = strings.SplitN(parts[1], ":", 2)[1]
 	data = strings.TrimSpace(data)
 	json.Unmarshal([]byte(data), &json_data)
 	return
 }
-
 
 func expect(t *testing.T, a interface{}, b interface{}) {
 	if a != b {
 		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
 	}
 }
-
 
 func TestMainPage(t *testing.T) {
 	response := httptest.NewRecorder()
@@ -86,7 +82,6 @@ func TestEmptyUpdatePost(t *testing.T) {
 	expect(t, response.Code, http.StatusBadRequest)
 }
 
-
 func TestMalformedUpdatePost(t *testing.T) {
 	response := httptest.NewRecorder()
 
@@ -99,7 +94,6 @@ func TestMalformedUpdatePost(t *testing.T) {
 
 	expect(t, response.Code, http.StatusBadRequest)
 }
-
 
 func TestGoodUpdatePost(t *testing.T) {
 	response := httptest.NewRecorder()
@@ -118,7 +112,6 @@ func TestGoodUpdatePost(t *testing.T) {
 	expect(t, response.Code, http.StatusOK)
 }
 
-
 func TestUpdatePostTypeOnly(t *testing.T) {
 	response := httptest.NewRecorder()
 
@@ -133,7 +126,6 @@ func TestUpdatePostTypeOnly(t *testing.T) {
 
 	expect(t, response.Code, http.StatusOK)
 }
-
 
 func TestUpdatePostNoType(t *testing.T) {
 	response := httptest.NewRecorder()
@@ -151,7 +143,6 @@ func TestUpdatePostNoType(t *testing.T) {
 	expect(t, response.Code, http.StatusBadRequest)
 }
 
-
 func TestUpdatePostNested(t *testing.T) {
 	response := httptest.NewRecorder()
 
@@ -168,7 +159,6 @@ func TestUpdatePostNested(t *testing.T) {
 
 	expect(t, response.Code, http.StatusOK)
 }
-
 
 func TestUpdatePostWrongPayloads(t *testing.T) {
 	t.SkipNow()
@@ -188,7 +178,6 @@ func TestUpdatePostWrongPayloads(t *testing.T) {
 	expect(t, response.Code, http.StatusBadRequest)
 }
 
-
 func TestUpdateOptions(t *testing.T) {
 	response := httptest.NewRecorder()
 
@@ -202,8 +191,7 @@ func TestUpdateOptions(t *testing.T) {
 	expect(t, response.Code, http.StatusOK)
 }
 
-
-func TestBrokerRoom(t *testing.T){
+func TestBrokerRoom(t *testing.T) {
 	broker := NewBroker()
 	room := broker.Room("foo")
 
@@ -216,8 +204,7 @@ func TestBrokerRoom(t *testing.T){
 
 }
 
-
-func TestBrokerRelease(t *testing.T){
+func TestBrokerRelease(t *testing.T) {
 	broker := NewBroker()
 	room := broker.Room("foo")
 
@@ -231,7 +218,6 @@ func TestBrokerRelease(t *testing.T){
 	expect(t, len(roomWithGuy), 0)
 
 }
-
 
 func TestStreamBasic(t *testing.T) {
 	response := NewMartiniRecorder()
@@ -249,7 +235,6 @@ func TestStreamBasic(t *testing.T) {
 	expect(t, response.HeaderMap["Access-Control-Allow-Methods"][0], "POST,OPTIONS")
 	expect(t, response.HeaderMap["Content-Type"][0], "text/event-stream")
 }
-
 
 func TestStreamResponsePayload(t *testing.T) {
 	response := NewMartiniRecorder()

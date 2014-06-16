@@ -8,6 +8,7 @@
 
 all: clean get test compile run
 werker: get test compile
+reload: compile run
 
 get:
 ifndef GOPATH

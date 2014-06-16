@@ -1,16 +1,14 @@
 package signaling
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/go-martini/martini"
+	"log"
+	"net/http"
 	"summoners"
 )
-
-import "log"
-import "fmt"
-import "encoding/json"
-import "bytes"
-import "net/http"
-
 
 func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
 	f, ok := resp.(http.Flusher)
@@ -25,12 +23,12 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			http.StatusInternalServerError)
 		return
 	}
-	var streamSend = func(m *Message){
+	streamSend := func(m *Message) {
 		if m.Id != "" {
 			fmt.Fprintf(resp, "id: %s\n", m.Id)
 		}
 		fmt.Fprintf(resp, "event: %s\n", m.Type)
-		fmt.Fprintf(resp, "data: %s\n", m.Data)
+		fmt.Fprintf(resp, "data: %s\n\n", m.Data)
 		f.Flush()
 	}
 	// Create a new channel, over which the broker can
@@ -46,7 +44,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	uid := "Maybe " + summoners.NewName(members)
 	message := &Message{"", "", "uid", uid, "", roomName}
 
-	if members >= MaxMembers{
+	if members >= MaxMembers {
 		streamSend(message.Rejected())
 		return
 	}
@@ -59,7 +57,6 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	msg := message.Uid()
 
 	streamSend(msg)
-
 	b.PushMessage(message.NewBuddy())
 	room[uid] = messageChan
 	// Remove this client from the map of attached clients
@@ -90,7 +87,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	var data map[string]string
 	json.Unmarshal(buf.Bytes(), &data)
 
-	if len(data) == 0 || data["type"] == ""{
+	if len(data) == 0 || data["type"] == "" {
 		http.Error(resp, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -102,7 +99,6 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	resp.WriteHeader(200)
 }
 
-
-func OptionsHandler(resp http.ResponseWriter, req *http.Request){
+func OptionsHandler(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(200)
 }
