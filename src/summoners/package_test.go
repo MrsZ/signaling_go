@@ -1,19 +1,18 @@
 package summoners
 
-import ("testing"
+import (
+	"testing"
 )
 
-
-func TestNewNamesBasic(t *testing.T){
+func TestNewNamesBasic(t *testing.T) {
 
 	var name string = NewName(0)
-	if name == ""{
+	if name == "" {
 		t.Errorf("Expected non empty name")
 	}
 }
 
-
-func TestNewNamesCollision(t *testing.T){
+func TestNewNamesCollision(t *testing.T) {
 
 	var name_first string = NewName(0)
 	var name_after string = NewName(1)
@@ -22,8 +21,7 @@ func TestNewNamesCollision(t *testing.T){
 	}
 }
 
-
-func TestNewNamesGeneration(t *testing.T){
+func TestNewNamesGeneration(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		var name string = NewName(i)
 		if name == "" {

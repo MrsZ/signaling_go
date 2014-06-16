@@ -43,7 +43,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	members := len(room)
 	uid := "Maybe " + summoners.NewName(members)
 	message := &Message{"", "", roomName, Meta{"uid", uid, ""}}
-	if members >= MaxMembers{
+	if members >= MaxMembers {
 		streamSend(message.Rejected())
 		return
 	}
@@ -86,7 +86,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	var meta Meta
 	json.Unmarshal(buf.Bytes(), &meta)
 
-	if  meta.Type == ""{
+	if meta.Type == "" {
 		http.Error(resp, "Bad Request", http.StatusBadRequest)
 		return
 	}
