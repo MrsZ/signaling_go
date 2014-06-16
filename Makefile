@@ -12,25 +12,25 @@ reload: compile run
 
 get:
 ifndef GOPATH
-	@echo "GOPATH should be specified"
+	@echo "$(ERROR_COLOR)GOPATH should be specified$(NO_COLOR)"
 	@exit 2
 else
-	@echo Get ...
+	@echo "$(OK_COLOR)==> Get$(NO_COLOR)"
 	@go get $(PACKAGES)
 endif
 
 test:
-	@echo Tests ...
+	@echo "$(OK_COLOR)==> Tests$(NO_COLOR)"
 	@go test -v $(PACKAGES)
 
 compile:
-	@echo Compile ...
+	@echo "$(OK_COLOR)==> Compile$(NO_COLOR)"
 	@go build $(APP_MAIN)
 
 run:
-	@echo Run ...
+	@echo "$(OK_COLOR)==> Run$(NO_COLOR)"
 	@./$(APP_NAME)
 
 clean:
-	@echo Clean ...
+	@echo "$(OK_COLOR)==> Clean$(NO_COLOR)"
 	@rm -f $(APP_NAME)
