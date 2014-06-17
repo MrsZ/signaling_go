@@ -43,15 +43,17 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	members := len(room)
 	uid := "Maybe " + summoners.NewName(members)
 	message := &Message{"", "", roomName, Meta{"uid", uid, ""}}
-	if members >= MaxMembers {
-		streamSend(message.Rejected())
-		return
-	}
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
 	headers.Set("Connection", "keep-alive")
 	f.Flush()
+	if members > MaxMembers {
+		rejected := message.Rejected()
+		streamSend(rejected)
+		b.PushMessage(rejected)
+		return
+	}
 	closer := c.CloseNotify()
 	msg := message.Uid()
 
