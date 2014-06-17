@@ -17,6 +17,7 @@ ifndef GOPATH
 else
 	@echo "$(OK_COLOR)==> Get$(NO_COLOR)"
 	@go get $(PACKAGES)
+	@go get github.com/martini-contrib/gorelic
 endif
 
 test:
