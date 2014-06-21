@@ -1,25 +1,44 @@
 package main
 
 import (
+	"code.google.com/p/gcfg"
 	"flag"
 	"fmt"
 	"github.com/martini-contrib/gorelic"
 	"net/http"
-	"os"
 	"signaling"
 )
 
+// compile passing -ldflags "-X main.Build <build sha1>"
+var Build string
+
 func main() {
-	addr := flag.String("bind", "0.0.0.0:8080", "Bind address ip:port")
+	filepath := flag.String("c", "default.ini", "Config file path")
 	flag.Parse()
 	martiniApp := signaling.App()
-
-	newRelicKey := os.Getenv("NewRelicKey")
-	if len(newRelicKey) > 0 {
-		gorelic.InitNewrelicAgent(newRelicKey, "InstaMuteGo", true)
+	settings := ReadConfig(*filepath).App
+	if len(settings.NewRelicApp) > 0 {
+		gorelic.InitNewrelicAgent(settings.NewRelicKey, settings.NewRelicApp, true)
 		martiniApp.Use(gorelic.Handler)
 	}
+	fmt.Printf("Using build: %s\n", Build)
+	fmt.Printf("Start serving %s\n", settings.Addr)
+	http.ListenAndServe(settings.Addr, martiniApp)
+}
 
-	fmt.Printf("Start serving %s\n", *addr)
-	http.ListenAndServe(*addr, martiniApp)
+type Settings struct {
+	App struct {
+		Addr        string
+		NewRelicKey string
+		NewRelicApp string
+	}
+}
+
+func ReadConfig(filename string) *Settings {
+	var settings Settings
+	err := gcfg.ReadFileInto(&settings, filename)
+	if err != nil {
+		panic(err)
+	}
+	return &settings
 }
