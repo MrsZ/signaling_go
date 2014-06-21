@@ -7,6 +7,7 @@ import (
 	"github.com/martini-contrib/gorelic"
 	"net/http"
 	"signaling"
+	"runtime"
 )
 
 // compile passing -ldflags "-X main.Build <build sha1>"
@@ -22,6 +23,7 @@ func main() {
 		martiniApp.Use(gorelic.Handler)
 	}
 	fmt.Printf("Using build: %s\n", Build)
+	runtime.GOMAXPROCS(settings.GOMAXPROCS)
 	fmt.Printf("Start serving %s\n", settings.Addr)
 	http.ListenAndServe(settings.Addr, martiniApp)
 }
@@ -31,6 +33,7 @@ type Settings struct {
 		Addr        string
 		NewRelicKey string
 		NewRelicApp string
+		GOMAXPROCS int
 	}
 }
 
