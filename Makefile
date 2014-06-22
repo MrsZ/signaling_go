@@ -17,7 +17,7 @@ ifndef GOPATH
 else
 	@echo "$(OK_COLOR)==> Get$(NO_COLOR)"
 	@go get $(PACKAGES)
-	@go get github.com/martini-contrib/gorelic
+	-@go get
 endif
 
 test:
@@ -26,7 +26,7 @@ test:
 
 compile:
 	@echo "$(OK_COLOR)==> Compile$(NO_COLOR)"
-	@go build $(APP_MAIN)
+	@go build -ldflags "-X main.Build $(VERSION)" $(APP_MAIN)
 
 run:
 	@echo "$(OK_COLOR)==> Run$(NO_COLOR)"
