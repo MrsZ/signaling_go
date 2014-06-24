@@ -4,7 +4,7 @@ type Message struct {
 	Id   string
 	Data string
 	Room string
-	Meta
+	*Meta
 }
 
 type Meta struct {

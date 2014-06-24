@@ -43,7 +43,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 
 	members := len(room)
 	uid := "Maybe " + summoners.NewName(members)
-	message := &Message{"", "", roomName, Meta{"uid", uid, ""}}
+	message := &Message{"", "", roomName, &Meta{"uid", uid, ""}}
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
@@ -99,7 +99,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 		return
 	}
 
-	message := &Message{"", buf.String(), roomName, meta}
+	message := &Message{"", buf.String(), roomName, &meta}
 	b.PushMessage(message)
 
 	resp.WriteHeader(200)
