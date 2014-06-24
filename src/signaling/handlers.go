@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"summoners"
+	"time"
 )
 
 func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Params, b *Broker) {
@@ -42,7 +43,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 
 	members := len(room)
 	uid := "Maybe " + summoners.NewName(members)
-	message := &Message{"", "", roomName, Meta{"uid", uid, ""}}
+	message := &Message{"", "", roomName, &Meta{"uid", uid, ""}}
 	headers := resp.Header()
 	headers.Set("Content-Type", "text/event-stream")
 	headers.Set("Cache-Control", "no-cache")
@@ -62,7 +63,9 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	room[uid] = messageChan
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
+	ticker := time.NewTicker(2 * time.Minute)
 	defer func() {
+		ticker.Stop()
 		b.Release(roomName, uid)
 		b.PushMessage(message.Dropped())
 	}()
@@ -71,6 +74,9 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 		select {
 		case msg := <-messageChan:
 			streamSend(msg)
+		case <-ticker.C:
+			log.Printf("Sending keep alive to %s\n", uid)
+			streamSend(message.Keepalive())
 		case <-closer:
 			log.Println("Closing connection")
 			return
@@ -93,7 +99,7 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 		return
 	}
 
-	message := &Message{"", buf.String(), roomName, meta}
+	message := &Message{"", buf.String(), roomName, &meta}
 	b.PushMessage(message)
 
 	resp.WriteHeader(200)

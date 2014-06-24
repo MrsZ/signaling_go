@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/martini-contrib/gorelic"
 	"net/http"
-	"signaling"
 	"runtime"
+	"signaling"
 )
 
 // compile passing -ldflags "-X main.Build <build sha1>"
@@ -33,7 +33,7 @@ type Settings struct {
 		Addr        string
 		NewRelicKey string
 		NewRelicApp string
-		GOMAXPROCS int
+		GOMAXPROCS  int
 	}
 }
 
