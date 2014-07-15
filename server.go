@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/martini-contrib/gorelic"
+	"github.com/msoedov/signaling_go/signaling"
 	"net/http"
 	"runtime"
-	"signaling"
 )
 
 // compile passing -ldflags "-X main.Build <build sha1>"

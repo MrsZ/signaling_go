@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-martini/martini"
+	"github.com/msoedov/signaling_go/summoners"
 	"log"
 	"net/http"
-	"summoners"
 	"time"
 )
 

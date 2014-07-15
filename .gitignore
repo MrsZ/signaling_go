@@ -56,26 +56,13 @@ env/
 .env/
 .env#
 
-Src
-src/github.com/
-.src/github.com/
-.src/github.com
-
-Deps
-dep/
-.dep/
-.dep
+/src/
+/bin/
+/dep/
 
 # Project
 /public/
 
-# Settings
-settings_local.py
-local_settings.py
-local.py
-
-# SQLite
-*.sqlite*
 *.db
 
 # Translations
