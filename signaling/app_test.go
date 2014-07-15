@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	assert "github.com/msoedov/signaling_go/assert"
 )
 
 type MartiniResponseRecorder struct {
@@ -66,7 +67,7 @@ func TestMainPage(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 }
 
 func TestEmptyUpdatePost(t *testing.T) {
@@ -79,7 +80,7 @@ func TestEmptyUpdatePost(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusBadRequest)
+	assert.Equals(t, response.Code, http.StatusBadRequest)
 }
 
 func TestMalformedUpdatePost(t *testing.T) {
@@ -92,7 +93,7 @@ func TestMalformedUpdatePost(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusBadRequest)
+	assert.Equals(t, response.Code, http.StatusBadRequest)
 }
 
 func TestGoodUpdatePost(t *testing.T) {
@@ -109,7 +110,7 @@ func TestGoodUpdatePost(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 }
 
 func TestUpdatePostTypeOnly(t *testing.T) {
@@ -124,7 +125,7 @@ func TestUpdatePostTypeOnly(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 }
 
 func TestUpdatePostNoType(t *testing.T) {
@@ -140,7 +141,7 @@ func TestUpdatePostNoType(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusBadRequest)
+	assert.Equals(t, response.Code, http.StatusBadRequest)
 }
 
 func TestUpdatePostNested(t *testing.T) {
@@ -157,7 +158,7 @@ func TestUpdatePostNested(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 }
 
 func TestUpdatePostWrongPayloads(t *testing.T) {
@@ -175,7 +176,7 @@ func TestUpdatePostWrongPayloads(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusBadRequest)
+	assert.Equals(t, response.Code, http.StatusBadRequest)
 }
 
 func TestUpdateOptions(t *testing.T) {
@@ -188,19 +189,19 @@ func TestUpdateOptions(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 }
 
 func TestBrokerRoom(t *testing.T) {
 	broker := NewBroker()
 	room := broker.Room("foo")
 
-	expect(t, len(room), 0)
+	assert.Equals(t, len(room), 0)
 	messageChan := make(chan *Message)
 	room["SomeGuy"] = messageChan
 
 	roomWithGuy := broker.Room("foo")
-	expect(t, len(roomWithGuy), 1)
+	assert.Equals(t, len(roomWithGuy), 1)
 
 }
 
@@ -208,14 +209,14 @@ func TestBrokerRelease(t *testing.T) {
 	broker := NewBroker()
 	room := broker.Room("foo")
 
-	expect(t, len(room), 0)
+	assert.Equals(t, len(room), 0)
 	messageChan := make(chan *Message)
 	room["SomeGuy"] = messageChan
 
 	broker.Release("foo", "SomeGuy")
 
 	roomWithGuy := broker.Room("foo")
-	expect(t, len(roomWithGuy), 0)
+	assert.Equals(t, len(roomWithGuy), 0)
 
 }
 
@@ -231,9 +232,9 @@ func TestStreamBasic(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
-	expect(t, response.HeaderMap["Access-Control-Allow-Methods"][0], "POST,OPTIONS")
-	expect(t, response.HeaderMap["Content-Type"][0], "text/event-stream")
+	assert.Equals(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.HeaderMap["Access-Control-Allow-Methods"][0], "POST,OPTIONS")
+	assert.Equals(t, response.HeaderMap["Content-Type"][0], "text/event-stream")
 }
 
 func TestStreamResponsePayload(t *testing.T) {
@@ -248,15 +249,15 @@ func TestStreamResponsePayload(t *testing.T) {
 	}
 	martiniApp.ServeHTTP(response, request)
 
-	expect(t, response.Code, http.StatusOK)
+	assert.Equals(t, response.Code, http.StatusOK)
 
 	name, payloads := ParsePayload(response.Body)
 
-	expect(t, name, "uid")
+	assert.Equals(t, name, "uid")
 
-	expect(t, payloads["type"], "uid")
-	expect(t, payloads["uid"], payloads["from"])
+	assert.Equals(t, payloads["type"], "uid")
+	assert.Equals(t, payloads["uid"], payloads["from"])
 	//	present from and to
 	_, ok := payloads["from"]
-	expect(t, ok, true)
+	assert.Equals(t, ok, true)
 }
