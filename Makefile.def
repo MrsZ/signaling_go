@@ -1,4 +1,4 @@
-PACKAGES := signaling summoners
+PACKAGES := ./signaling ./summoners
 APP_MAIN := server.go
 APP_NAME := server
 

@@ -7,7 +7,7 @@
 #
 
 all: clean get test compile run
-werker: get test compile
+werker: get test vet compile
 reload: compile run
 
 get:
@@ -16,7 +16,6 @@ ifndef GOPATH
 	@exit 2
 else
 	@echo "$(OK_COLOR)==> Get$(NO_COLOR)"
-	@go get $(PACKAGES)
 	-@go get
 endif
 
@@ -35,3 +34,7 @@ run:
 clean:
 	@echo "$(OK_COLOR)==> Clean$(NO_COLOR)"
 	@rm -f $(APP_NAME)
+
+vet:
+	@echo "$(OK_COLOR)==> Go Vet$(NO_COLOR)"
+	@go vet -n $(PACKAGES)
