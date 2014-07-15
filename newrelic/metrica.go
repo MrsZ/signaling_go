@@ -1,7 +1,7 @@
 package newrelic
 
 type MembersMetrica struct {
-	observable Observable
+	Observable Observable
 }
 
 func (self *MembersMetrica) GetName() string {
@@ -11,12 +11,12 @@ func (self *MembersMetrica) GetUnits() string {
 	return "Count"
 }
 func (self *MembersMetrica) GetValue() (float64, error) {
-	memberCount, _ := self.observable.GetStats()
+	memberCount, _ := self.Observable.GetStats()
 	return float64(memberCount.Count()), nil
 }
 
 type FailuresMetrica struct {
-	observable Observable
+	Observable Observable
 }
 
 func (self *FailuresMetrica) GetName() string {
@@ -26,7 +26,7 @@ func (self *FailuresMetrica) GetUnits() string {
 	return "Count"
 }
 func (self *FailuresMetrica) GetValue() (float64, error) {
-	_, failures := self.observable.GetStats()
+	_, failures := self.Observable.GetStats()
 	defer func() { failures.Clear() }()
 	return float64(failures.Count()), nil
 }
