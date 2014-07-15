@@ -1,14 +1,14 @@
-package signaling
+package signaling_test
 
 import (
 	"bytes"
 	"encoding/json"
+	assert "github.com/msoedov/signaling_go/assert"
+	. "github.com/msoedov/signaling_go/signaling"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
-	assert "github.com/msoedov/signaling_go/assert"
 )
 
 type MartiniResponseRecorder struct {
@@ -49,12 +49,6 @@ func ParsePayload(buf *bytes.Buffer) (name string, json_data map[string]string) 
 	data = strings.TrimSpace(data)
 	json.Unmarshal([]byte(data), &json_data)
 	return
-}
-
-func expect(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
-	}
 }
 
 func TestMainPage(t *testing.T) {
@@ -259,5 +253,5 @@ func TestStreamResponsePayload(t *testing.T) {
 	assert.Equals(t, payloads["uid"], payloads["from"])
 	//	present from and to
 	_, ok := payloads["from"]
-	assert.Equals(t, ok, true)
+	assert.Assert(t, ok, "From field missed")
 }

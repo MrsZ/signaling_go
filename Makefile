@@ -38,3 +38,7 @@ clean:
 vet:
 	@echo "$(OK_COLOR)==> Go Vet$(NO_COLOR)"
 	@go vet -n $(PACKAGES)
+
+fmt:
+	@echo "$(OK_COLOR)==> Auto format $(NO_COLOR)"
+	@go fmt $(PACKAGES)
