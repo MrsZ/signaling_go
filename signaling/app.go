@@ -3,11 +3,13 @@ package signaling
 import "github.com/go-martini/martini"
 import "github.com/martini-contrib/cors"
 
+var MembersBroker *Broker
+
 func App() *martini.ClassicMartini {
 	m := martini.Classic()
 	// Make a new Broker instance
-	broker := NewBroker()
-	m.Map(broker)
+	MembersBroker = NewBroker()
+	m.Map(MembersBroker)
 
 	m.Get("/", func() string {
 		return "Sup"

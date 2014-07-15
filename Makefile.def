@@ -1,4 +1,4 @@
-PACKAGES := ./signaling ./summoners
+PACKAGES := ./signaling ./summoners ./newrelic
 APP_MAIN := server.go
 APP_NAME := server
 
