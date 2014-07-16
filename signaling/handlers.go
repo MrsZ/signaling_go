@@ -78,7 +78,7 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 			streamSend(msg)
 		case <-ticker.C:
 			log.Printf("Sending keep alive to %s\n", uid)
-			streamSend(message.Keepalive())
+			streamSend(message.Heartbeat())
 		case <-closer:
 			log.Println("Closing connection")
 			return

@@ -44,8 +44,8 @@ func (self *Message) Rejected() *Message {
 	return self
 }
 
-func (self *Message) Keepalive() *Message {
-	self.Type = "keepalive"
+func (self *Message) Heartbeat() *Message {
+	self.Type = "heartbeat"
 	data := map[string]string{"from": self.From, "to": "", "type": self.Type}
 	self.Data = ToJsonString(&data)
 	return self
