@@ -1,11 +1,16 @@
 package signaling
 
-import "log"
+import (
+	metrics "github.com/yvasiyarov/go-metrics"
+	"log"
+)
 
 type Broker struct {
 
 	// room name -> client uid -> client chanel
-	clients map[string]map[string]chan *Message
+	clients   map[string]map[string]chan *Message
+	connected metrics.Counter
+	failures  metrics.Counter
 }
 
 func (self *Broker) Room(roomName string) map[string]chan *Message {
@@ -33,6 +38,8 @@ func (self *Broker) Release(roomName, member string) {
 func NewBroker() *Broker {
 	b := &Broker{
 		make(map[string]map[string]chan *Message),
+		metrics.NewCounter(),
+		metrics.NewCounter(),
 	}
 	return b
 }
@@ -60,4 +67,8 @@ func (broker *Broker) PushMessage(msg *Message) {
 		}
 	}
 	log.Printf("Broadcast message %s to %s clients", msg.Type, msg.Room)
+}
+
+func (self *Broker) GetStats() (metrics.Counter, metrics.Counter) {
+	return self.connected, self.failures
 }

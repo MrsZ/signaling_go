@@ -64,10 +64,12 @@ func ClientStream(resp http.ResponseWriter, req *http.Request, params martini.Pa
 	// Remove this client from the map of attached clients
 	// when `ClientStream` exits.
 	ticker := time.NewTicker(2 * time.Minute)
+	b.connected.Inc(1)
 	defer func() {
 		ticker.Stop()
 		b.Release(roomName, uid)
 		b.PushMessage(message.Dropped())
+		b.connected.Dec(1)
 	}()
 
 	for {
