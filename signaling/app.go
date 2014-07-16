@@ -21,6 +21,7 @@ func App() *martini.ClassicMartini {
 	}))
 
 	m.Post("/update/:room", UpdateHandler)
+	m.Post("/failure", FailureHandler)
 
 	m.Options("/update/:room", OptionsHandler)
 

@@ -4,8 +4,8 @@ import (
 	"code.google.com/p/gcfg"
 	"flag"
 	"fmt"
-	"github.com/msoedov/signaling_go/signaling"
 	"github.com/msoedov/signaling_go/newrelic"
+	"github.com/msoedov/signaling_go/signaling"
 	"net/http"
 	"runtime"
 )

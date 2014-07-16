@@ -255,3 +255,26 @@ func TestStreamResponsePayload(t *testing.T) {
 	_, ok := payloads["from"]
 	assert.Assert(t, ok, "From field missed")
 }
+
+func TestFailuresStats(t *testing.T) {
+	response := NewMartiniRecorder()
+
+	martiniApp := App()
+
+	_, failures := MembersBroker.GetStats()
+
+	assert.Equals(t, failures, 0)
+	request, err := http.NewRequest("POST", "/failure", nil)
+	assert.Ok(t, err)
+
+	martiniApp.ServeHTTP(response, request)
+
+	assert.Equals(t, response.Code, http.StatusOK)
+
+	_, failures = MembersBroker.GetStats()
+	assert.Equals(t, failures, 1)
+	//	ensure counter reset
+	_, failures = MembersBroker.GetStats()
+	assert.Equals(t, failures, 0)
+
+}

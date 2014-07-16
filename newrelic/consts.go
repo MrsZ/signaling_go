@@ -1,7 +1,7 @@
 package newrelic
 
 const (
-	PollInterval = 10
+	PollInterval = 30
 
 	//DefaultAgentGuid is plugin ID in NewRelic.
 	//You should not change it unless you want to create your own plugin.

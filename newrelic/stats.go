@@ -24,6 +24,10 @@ func InitNewrelicAgent(license string, appname string, verbose bool, obs Observa
 
 	component.AddMetrica(m)
 
+	f := &FailuresMetrica{obs}
+
+	component.AddMetrica(f)
+
 	plugin.Verbose = verbose
 	go plugin.Run()
 	return nil

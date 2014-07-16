@@ -107,6 +107,12 @@ func UpdateHandler(resp http.ResponseWriter, req *http.Request, params martini.P
 	resp.WriteHeader(200)
 }
 
+
+func FailureHandler(resp http.ResponseWriter, b *Broker) {
+	b.failures.Inc(1)
+	resp.WriteHeader(200)
+}
+
 func OptionsHandler(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(200)
 }
