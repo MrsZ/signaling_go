@@ -11,8 +11,8 @@ func (self *MembersMetrica) GetUnits() string {
 	return "Count"
 }
 func (self *MembersMetrica) GetValue() (float64, error) {
-	memberCount, _ := self.Observable.GetStats()
-	return float64(memberCount.Count()), nil
+	normal, _ := self.Observable.GetStats()
+	return float64(normal), nil
 }
 
 type FailuresMetrica struct {
@@ -27,6 +27,5 @@ func (self *FailuresMetrica) GetUnits() string {
 }
 func (self *FailuresMetrica) GetValue() (float64, error) {
 	_, failures := self.Observable.GetStats()
-	defer func() { failures.Clear() }()
-	return float64(failures.Count()), nil
+	return float64(failures), nil
 }

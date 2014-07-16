@@ -2,14 +2,14 @@ package newrelic
 
 import (
 	"fmt"
-	metrics "github.com/yvasiyarov/go-metrics"
 	"github.com/yvasiyarov/newrelic_platform_go"
 )
 
 type Observable interface {
-	GetStats() (metrics.Counter, metrics.Counter)
+	GetStats() (int, int)
 }
 
+// TODO: drop appname
 func InitNewrelicAgent(license string, appname string, verbose bool, obs Observable) error {
 
 	if license == "" {
