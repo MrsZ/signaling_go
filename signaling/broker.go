@@ -69,6 +69,7 @@ func (broker *Broker) PushMessage(msg *Message) {
 	log.Printf("Broadcast message %s to %s clients", msg.Type, msg.Room)
 }
 
-func (self *Broker) GetStats() (metrics.Counter, metrics.Counter) {
-	return self.connected, self.failures
+func (self *Broker) GetStats() (int, int) {
+	defer self.failures.Clear()
+	return int(self.connected.Count()), int(self.failures.Count())
 }
