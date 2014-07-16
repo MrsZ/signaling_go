@@ -4,8 +4,8 @@ import (
 	"code.google.com/p/gcfg"
 	"flag"
 	"fmt"
-	"github.com/martini-contrib/gorelic"
 	"github.com/msoedov/signaling_go/signaling"
+	"github.com/msoedov/signaling_go/newrelic"
 	"net/http"
 	"runtime"
 )
@@ -19,8 +19,7 @@ func main() {
 	martiniApp := signaling.App()
 	settings := ReadConfig(*filepath).App
 	if len(settings.NewRelicApp) > 0 {
-		gorelic.InitNewrelicAgent(settings.NewRelicKey, settings.NewRelicApp, true)
-		martiniApp.Use(gorelic.Handler)
+		newrelic.InitNewrelicAgent(settings.NewRelicKey, settings.NewRelicApp, false, signaling.MembersBroker)
 	}
 	fmt.Printf("Using build: %s\n", Build)
 	runtime.GOMAXPROCS(settings.GOMAXPROCS)

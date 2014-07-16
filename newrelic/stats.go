@@ -25,6 +25,6 @@ func InitNewrelicAgent(license string, appname string, verbose bool, obs Observa
 	component.AddMetrica(m)
 
 	plugin.Verbose = verbose
-	plugin.Run()
+	go plugin.Run()
 	return nil
 }
